@@ -1,13 +1,32 @@
-const registerUser = (req, res) => {};
+import { PrismaClient } from "../../generated/prisma/index.js";
 
-const verifyUser = (req, res) => {};
+const prisma = new PrismaClient();
 
-const login = (req, res) => {};
+export const registerUser = async (req, res) => {
+  const { username, password, email, name } = req.body;
 
-const updateUser = (req, res) => {};
+  const user = await prisma.user.create({
+    data: {
+      email,
+      username,
+      password,
+      name,
+      isVerified: false,
+    },
+  });
+  console.log("user", user);
 
-const refreshToken = (req, res) => {};
+  res.send(201);
+};
 
-const passwordResetToken = (req, res) => {};
+export const verifyUser = (req, res) => {};
 
-const accessToken = (req, res) => {};
+export const login = (req, res) => {};
+
+export const updateProfile = (req, res) => {};
+
+export const refreshToken = (req, res) => {};
+
+export const passwordResetToken = (req, res) => {};
+
+export const accessToken = (req, res) => {};
