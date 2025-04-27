@@ -1,0 +1,17 @@
+const httpStatus = {
+  OK: 200,
+  Created: 201,
+  BadRequest: 400,
+  Unauthorized: 401,
+  Forbidden: 403,
+  NotFound: 404,
+  MethodNotAllowed: 405,
+  RequestTimeout: 408,
+  ContentTooLarge: 413,
+  UnsupportedMediaType: 415,
+  TooManyRequests: 429,
+  InternalServerError: 500,
+  BadGateway: 502,
+  ServiceUnavailable: 503,
+  GatewayTimeout: 504,
+};

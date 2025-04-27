@@ -1,7 +1,6 @@
-import { body, validationResult } from "express-validator";
+import { body } from "express-validator";
 
-export const registerUserValidator = (req, res, next) => {
-  console.log("validating register");
+export const registerUserValidator = [
   body("username")
     .trim()
     .isString()
@@ -10,8 +9,8 @@ export const registerUserValidator = (req, res, next) => {
     .isLength({ min: 4, max: 15 })
     .withMessage(
       "Username must be 4–15 characters long and can include only letters and numbers.",
-    );
-
+    ),
+  // TODO: write a custom validator for password.
   body("password")
     .trim()
     .isString()
@@ -20,14 +19,14 @@ export const registerUserValidator = (req, res, next) => {
     .isLength({ min: 8, max: 15 })
     .withMessage(
       "Password must be 8–15 characters long and must include small and capital letters, numbers, and special symbols.",
-    );
+    ),
 
   body("email")
     .trim()
     .isEmail()
     .notEmpty()
     .escape()
-    .withMessage("Please enter a valid email address.");
+    .withMessage("Please enter a valid email address."),
 
   body("name")
     .trim()
@@ -37,10 +36,5 @@ export const registerUserValidator = (req, res, next) => {
     .escape()
     .withMessage(
       "Name must be2-30 characters long and should include only alphabets",
-    );
-
-  const result = validationResult(req);
-  if (result.isEmpty()) {
-    next();
-  } else res.send({ errors: result.array() });
-};
+    ),
+];

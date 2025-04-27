@@ -10,10 +10,11 @@ import {
   accessToken,
 } from "../controllers/user.controller.js";
 import { registerUserValidator } from "../validators/userRoute.validators.js";
+import { validate } from "../middlewares/validate.middleware.js";
 
 const router = Router();
 
-router.post("/register", registerUserValidator, registerUser);
+router.post("/register", registerUserValidator, validate, registerUser);
 
 router.get("/verify", verifyUser);
 
