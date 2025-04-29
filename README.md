@@ -44,12 +44,28 @@ Run the following to create your initial migration:
 npx prisma migrate dev --name init
 ```
 
-## 5. Install Prisma Client
+## 5. Run db push Command
+
+Run the following will push migrations to database:
+
+```bash
+npx prisma db push
+```
+
+## 6. Install Prisma Client
 
 Install Prisma Client to interact with your database:
 
 ```bash
 npm install @prisma/client
+```
+
+## 7. Run Prisma Studio
+
+Run following command to see database in prisma studio
+
+```bash
+npx prisma studio
 ```
 
 > **Important:** Make sure you import `PrismaClient` correctly from the **generated folder’s `index.js` file**, not from the default `@prisma/client` if you are using a custom output path.

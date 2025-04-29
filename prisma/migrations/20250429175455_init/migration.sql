@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "verificationTokenExpiry" SET DATA TYPE BIGINT,
+ALTER COLUMN "refreshTokenExpiry" SET DATA TYPE BIGINT,
+ALTER COLUMN "passwordResetTokenExpiry" SET DATA TYPE BIGINT,
+ALTER COLUMN "accessTokenExpiry" SET DATA TYPE BIGINT;

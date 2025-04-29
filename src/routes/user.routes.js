@@ -16,7 +16,7 @@ const router = Router();
 
 router.post("/register", registerUserValidator, validate, registerUser);
 
-router.get("/verify", verifyUser);
+router.get("/verify/:token", verifyUser);
 
 router.get("/login", login);
 
