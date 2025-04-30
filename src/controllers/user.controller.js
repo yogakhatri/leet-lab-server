@@ -1,4 +1,5 @@
 import "dotenv/config";
+import jwt from "jsonwebtoken";
 
 import { PrismaClient } from "../../generated/prisma/index.js";
 import { ApiError } from "../utils/api-error.js";
@@ -9,6 +10,7 @@ import { sendEmail } from "../utils/send-mails.js";
 import { getHashedPassword } from "../utils/utils.js";
 
 const prisma = new PrismaClient();
+
 // TODO: write test cases for different scenarios
 export const registerUser = asyncHandler(async (req, res) => {
   const { username, password, email, name } = req.body;
@@ -94,7 +96,61 @@ export const verifyUser = async (req, res) => {
     .json(new ApiResponses(httpStatus.OK, "User verified successfully."));
 };
 
-export const login = (req, res) => {};
+export const login = async (req, res) => {
+  const { username, password } = req.body;
+  const hashedPassword = getHashedPassword(password);
+
+  const user = await prisma.user.findFirst({
+    where: {
+      username,
+      password: hashedPassword,
+    },
+  });
+
+  if (!user || !user.isVerified) {
+    return res
+      .status(httpStatus.BadRequest)
+      .json(
+        new ApiResponses(
+          httpStatus.BadRequest,
+          !!user
+            ? "username or password is incorrect"
+            : "Please verify user first.",
+        ),
+      );
+  }
+
+  const accessToken = jwt.sign(
+    {
+      username: user.username,
+      email: user.email,
+      id: user.id,
+    },
+    process.env.JWT_ACCESS_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_VALIDITY },
+  );
+
+  const refreshToken = jwt.sign(
+    {
+      id: user.id,
+    },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_VALIDITY },
+  );
+
+  res.cookie("jwt", refreshToken, {
+    httpOnly: true,
+    sameSite: "None",
+    secure: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
+  return res.status(httpStatus.OK).json(
+    new ApiResponses(httpStatus.OK, "Login Successful.", {
+      accessToken,
+    }),
+  );
+};
 
 export const updateProfile = (req, res) => {};
 

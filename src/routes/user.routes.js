@@ -9,7 +9,10 @@ import {
   passwordResetToken,
   accessToken,
 } from "../controllers/user.controller.js";
-import { registerUserValidator } from "../validators/userRoute.validators.js";
+import {
+  loginUserValidator,
+  registerUserValidator,
+} from "../validators/userRoute.validators.js";
 import { validate } from "../middlewares/validate.middleware.js";
 
 const router = Router();
@@ -18,7 +21,7 @@ router.post("/register", registerUserValidator, validate, registerUser);
 
 router.get("/verify/:token", verifyUser);
 
-router.get("/login", login);
+router.post("/login", loginUserValidator, validate, login);
 
 router.put("/update-profile", updateProfile);
 
