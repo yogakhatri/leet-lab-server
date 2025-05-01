@@ -14,6 +14,7 @@ import {
   registerUserValidator,
 } from "../validators/userRoute.validators.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { jwtTokenValidation } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -23,7 +24,7 @@ router.get("/verify/:token", verifyUser);
 
 router.post("/login", loginUserValidator, validate, login);
 
-router.put("/update-profile", updateProfile);
+router.put("/update-profile", jwtTokenValidation, updateProfile);
 
 router.get("/refresh-token", refreshToken);
 

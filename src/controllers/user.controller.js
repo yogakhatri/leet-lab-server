@@ -152,7 +152,18 @@ export const login = async (req, res) => {
   );
 };
 
-export const updateProfile = (req, res) => {};
+export const updateProfile = asyncHandler(async (req, res) => {
+  const { username, email, name, image } = req.body;
+  const updatedUser = await prisma.user.update({
+    where: { username, email, name, image },
+  });
+
+  return res.status(httpStatus.OK).json(
+    new ApiResponses(httpStatus.OK, "User updated successfully", {
+      user: updatedUser,
+    }),
+  );
+});
 
 export const refreshToken = (req, res) => {};
 
