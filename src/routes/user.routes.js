@@ -7,14 +7,16 @@ import {
   updateProfile,
   refreshToken,
   passwordResetToken,
-  accessToken,
 } from "../controllers/user.controller.js";
 import {
   loginUserValidator,
   registerUserValidator,
 } from "../validators/userRoute.validators.js";
 import { validate } from "../middlewares/validate.middleware.js";
-import { jwtTokenValidation } from "../middlewares/auth.middleware.js";
+import {
+  accessTokenValidation,
+  refreshTokenValidation,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -24,12 +26,10 @@ router.get("/verify/:token", verifyUser);
 
 router.post("/login", loginUserValidator, validate, login);
 
-router.put("/update-profile", jwtTokenValidation, updateProfile);
+router.put("/update-profile", accessTokenValidation, updateProfile);
 
-router.get("/refresh-token", refreshToken);
+router.get("/refresh-token", refreshTokenValidation, refreshToken);
 
 router.get("/password-reset-token", passwordResetToken);
-
-router.get("/access-token", accessToken);
 
 export default router;

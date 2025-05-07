@@ -1,22 +1,52 @@
 import jwt from "jsonwebtoken";
-import { ApiError } from "../utils/api-error.js";
+
 import { httpStatus } from "../utils/constants.js";
+import { ApiResponses } from "../utils/api-responses.js";
 
-export const jwtTokenValidation = (req, res, next) => {
-  const bearerToken = req.headers.authorization.substring(7);
+export const accessTokenValidation = (req, res, next) => {
+  try {
+    if (!req.headers?.authorization) {
+      throw new Error();
+    }
+    const token = req.headers.authorization.substring(7);
+    jwt.verify(
+      token,
+      process.env.JWT_ACCESS_SECRET,
+      function (err, decodedToken) {
+        if (err) {
+          throw new Error();
+        }
+      },
+    );
+    return next();
+  } catch (error) {
+    return res
+      .status(httpStatus.BadRequest)
+      .json(new ApiResponses(httpStatus.BadRequest, "Invalid Request", error));
+  }
+};
 
-  jwt.verify(
-    bearerToken,
-    process.env.JWT_ACCESS_SECRET,
-    function (err, decoded) {
-      if (err) {
-        res
-          .status(httpStatus.ServiceUnavailable)
-          .json(new ApiError(httpStatus.BadRequest, "Invalid access token"));
-        return next();
-      }
-      req.payload = decoded;
-    },
-  );
-  return next();
+export const refreshTokenValidation = (req, res, next) => {
+  try {
+    if (!req.cookies) {
+      throw new Error();
+    }
+    const { refreshToken } = req.cookies;
+    jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET,
+      function (err, decodedToken) {
+        if (err) {
+          throw new Error();
+        }
+      },
+    );
+    return next();
+  } catch (error) {
+    return res
+      .status(httpStatus.BadRequest)
+      .json(
+        new ApiResponses(httpStatus.BadRequest, "Please login again", error),
+      );
+  }
 };

@@ -88,6 +88,7 @@ export const verifyUser = async (req, res) => {
     },
     data: {
       isVerified: true,
+      verificationTokenExpiry: undefined,
     },
   });
 
@@ -120,30 +121,7 @@ export const login = async (req, res) => {
       );
   }
 
-  const accessToken = jwt.sign(
-    {
-      username: user.username,
-      email: user.email,
-      id: user.id,
-    },
-    process.env.JWT_ACCESS_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_VALIDITY },
-  );
-
-  const refreshToken = jwt.sign(
-    {
-      id: user.id,
-    },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: process.env.REFRESH_TOKEN_VALIDITY },
-  );
-
-  res.cookie("jwt", refreshToken, {
-    httpOnly: true,
-    sameSite: "None",
-    secure: true,
-    maxAge: 24 * 60 * 60 * 1000,
-  });
+  const accessToken = generateAccessAndRefreshToken(user, res);
 
   return res.status(httpStatus.OK).json(
     new ApiResponses(httpStatus.OK, "Login Successful.", {
@@ -153,9 +131,10 @@ export const login = async (req, res) => {
 };
 
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { username, email, name, image } = req.body;
+  const { username, email, name, image, id } = req.body;
   const updatedUser = await prisma.user.update({
-    where: { username, email, name, image },
+    where: { id },
+    data: { username, email, name, image },
   });
 
   return res.status(httpStatus.OK).json(
@@ -165,8 +144,62 @@ export const updateProfile = asyncHandler(async (req, res) => {
   );
 });
 
-export const refreshToken = (req, res) => {};
+// TODO: Create a separate table and store information of previous refresh tokens
+export const refreshToken = async (req, res) => {
+  const { id } = jwt.verify(
+    req.cookies.refreshToken,
+    process.env.JWT_REFRESH_SECRET,
+  );
+  const user = await getUserById(id);
+  const accessToken = generateAccessAndRefreshToken(user, res);
+
+  return res.status(httpStatus.OK).json(
+    new ApiResponses(httpStatus.OK, "Login Successful.", {
+      accessToken,
+    }),
+  );
+};
 
 export const passwordResetToken = (req, res) => {};
 
-export const accessToken = (req, res) => {};
+const generateAccessAndRefreshToken = (user, res) => {
+  const refreshToken = jwt.sign(
+    {
+      id: user.id,
+    },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_VALIDITY },
+  );
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: true,
+    maxAge: 84000000,
+  });
+
+  return jwt.sign(
+    {
+      username: user.username,
+      email: user.email,
+      id: user.id,
+    },
+    process.env.JWT_ACCESS_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_VALIDITY },
+  );
+};
+
+const getUserById = async (id) => {
+  const user = await prisma.user.findFirst({
+    where: {
+      id,
+    },
+  });
+
+  if (!user) {
+    return res
+      .status(httpStatus.BadRequest)
+      .json(new ApiResponses(httpStatus.BadRequest, "Invalid Credentials"));
+  }
+  return user;
+};
