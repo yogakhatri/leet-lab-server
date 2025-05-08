@@ -7,6 +7,7 @@ import {
   updateProfile,
   refreshToken,
   passwordResetToken,
+  logout,
 } from "../controllers/auth.controller.js";
 import {
   loginUserValidator,
@@ -27,6 +28,8 @@ router.get("/verify/:token", verifyUser);
 router.post("/login", loginUserValidator, validate, login);
 
 router.put("/update-profile", accessTokenValidation, updateProfile);
+
+router.get("/logout", accessTokenValidation, logout);
 
 router.get("/refresh-token", refreshTokenValidation, refreshToken);
 

@@ -9,10 +9,26 @@ import { sendEmail } from "../utils/send-mails.js";
 import { getHashedPassword } from "../utils/utils.js";
 import { db } from "../lib/db.js";
 
-
 // TODO: write test cases for different scenarios
 export const registerUser = asyncHandler(async (req, res) => {
   const { username, password, email, name } = req.body;
+
+  const existingUser = await db.user.findMany({
+    where: {
+      OR: [{ email }, { username }],
+    },
+  });
+
+  if (existingUser) {
+    return res
+      .status(httpStatus.BadRequest)
+      .json(
+        new ApiResponses(
+          httpStatus.BadRequest,
+          "Username and password should be unique.",
+        ),
+      );
+  }
   const hashPassword = await getHashedPassword(password);
   const verificationToken = crypto.randomUUID();
   const verificationTokenExpiry = Date.parse(new Date()) + 1000 * 60 * 15;
@@ -23,6 +39,7 @@ export const registerUser = asyncHandler(async (req, res) => {
       username,
       password: hashPassword,
       name,
+      role: "USER",
       isVerified: false,
       verificationToken,
       verificationTokenExpiry,
@@ -43,7 +60,10 @@ export const registerUser = asyncHandler(async (req, res) => {
     return res
       .status(httpStatus.ServiceUnavailable)
       .json(
-        new ApiResponses(httpStatus.ServiceUnavailable, "Registration Failed!"),
+        new ApiResponses(
+          httpStatus.ServiceUnavailable,
+          "Registration Failed! Please try after sometime.",
+        ),
       );
   });
 
@@ -57,7 +77,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     );
 });
 
-export const verifyUser = async (req, res) => {
+export const verifyUser = asyncHandler(async (req, res) => {
   const { token } = req.params;
 
   const user = await db.user.findFirst({
@@ -94,9 +114,9 @@ export const verifyUser = async (req, res) => {
   return res
     .status(httpStatus.OK)
     .json(new ApiResponses(httpStatus.OK, "User verified successfully."));
-};
+});
 
-export const login = async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = getHashedPassword(password);
 
@@ -113,9 +133,7 @@ export const login = async (req, res) => {
       .json(
         new ApiResponses(
           httpStatus.BadRequest,
-          !!user
-            ? "username or password is incorrect"
-            : "Please verify user first.",
+          !!user ? "Invalid credentials" : "Please verify user first.",
         ),
       );
   }
@@ -127,7 +145,7 @@ export const login = async (req, res) => {
       accessToken,
     }),
   );
-};
+});
 
 export const updateProfile = asyncHandler(async (req, res) => {
   const { username, email, name, image, id } = req.body;
@@ -142,9 +160,22 @@ export const updateProfile = asyncHandler(async (req, res) => {
     }),
   );
 });
+// TODO:Invalidate access token
+export const logout = asyncHandler((req, res) => {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: true,
+    maxAge: 84000,
+  });
+
+  return res
+    .status(httpStatus.NoContent)
+    .json(new ApiResponses(httpStatus.NoContent, "Logout Successful."));
+});
 
 // TODO: Create a separate table and store information of previous refresh tokens
-export const refreshToken = async (req, res) => {
+export const refreshToken = asyncHandler(async (req, res) => {
   const { id } = jwt.verify(
     req.cookies.refreshToken,
     process.env.JWT_REFRESH_SECRET,
@@ -157,7 +188,7 @@ export const refreshToken = async (req, res) => {
       accessToken,
     }),
   );
-};
+});
 
 export const passwordResetToken = (req, res) => {};
 
