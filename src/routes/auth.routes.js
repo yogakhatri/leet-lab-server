@@ -7,7 +7,7 @@ import {
   updateProfile,
   refreshToken,
   passwordResetToken,
-} from "../controllers/user.controller.js";
+} from "../controllers/auth.controller.js";
 import {
   loginUserValidator,
   registerUserValidator,

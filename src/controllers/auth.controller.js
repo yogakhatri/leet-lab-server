@@ -1,15 +1,14 @@
 import "dotenv/config";
 import jwt from "jsonwebtoken";
 
-import { PrismaClient } from "../../generated/prisma/index.js";
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponses } from "../utils/api-responses.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { httpStatus } from "../utils/constants.js";
 import { sendEmail } from "../utils/send-mails.js";
 import { getHashedPassword } from "../utils/utils.js";
+import { db } from "../lib/db.js";
 
-const prisma = new PrismaClient();
 
 // TODO: write test cases for different scenarios
 export const registerUser = asyncHandler(async (req, res) => {
@@ -18,7 +17,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   const verificationToken = crypto.randomUUID();
   const verificationTokenExpiry = Date.parse(new Date()) + 1000 * 60 * 15;
 
-  const user = await prisma.user.create({
+  const user = await db.user.create({
     data: {
       email,
       username,
@@ -61,7 +60,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 export const verifyUser = async (req, res) => {
   const { token } = req.params;
 
-  const user = await prisma.user.findFirst({
+  const user = await db.user.findFirst({
     where: { verificationToken: token },
   });
 
@@ -82,7 +81,7 @@ export const verifyUser = async (req, res) => {
       );
   }
 
-  await prisma.user.update({
+  await db.user.update({
     where: {
       id: user.id,
     },
@@ -101,7 +100,7 @@ export const login = async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = getHashedPassword(password);
 
-  const user = await prisma.user.findFirst({
+  const user = await db.user.findFirst({
     where: {
       username,
       password: hashedPassword,
@@ -132,7 +131,7 @@ export const login = async (req, res) => {
 
 export const updateProfile = asyncHandler(async (req, res) => {
   const { username, email, name, image, id } = req.body;
-  const updatedUser = await prisma.user.update({
+  const updatedUser = await db.user.update({
     where: { id },
     data: { username, email, name, image },
   });
@@ -190,7 +189,7 @@ const generateAccessAndRefreshToken = (user, res) => {
 };
 
 const getUserById = async (id) => {
-  const user = await prisma.user.findFirst({
+  const user = await db.user.findFirst({
     where: {
       id,
     },
