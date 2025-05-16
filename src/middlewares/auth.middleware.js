@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 
 import { httpStatus } from "../utils/constants.js";
 import { ApiResponses } from "../utils/api-responses.js";
+import { asyncHandler } from "../utils/async-handler.js";
+import { db } from "../lib/db.js";
 
 // TODO: add functionality to check refresh token as well whenever checking access token
 export const accessTokenValidation = (req, res, next) => {
@@ -56,3 +58,18 @@ export const refreshTokenValidation = (req, res, next) => {
       );
   }
 };
+
+export const checkAdmin = asyncHandler(async (req, res, next) => {
+  const userId = req.body.userId;
+  const user = await db.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user || user.role !== "ADMIN") {
+    return res
+      .status(httpStatus.Forbidden)
+      .json(new ApiResponses(httpStatus.Forbidden, "Admins Only"));
+  }
+  req.user = user;
+  return next();
+});

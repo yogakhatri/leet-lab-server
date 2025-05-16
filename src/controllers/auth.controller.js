@@ -160,6 +160,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     }),
   );
 });
+
 // TODO:Invalidate access token
 export const logout = asyncHandler((req, res) => {
   res.clearCookie("refreshToken", {
